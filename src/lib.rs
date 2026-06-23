@@ -176,6 +176,53 @@ pub fn get_local_art_path(art_url: &str) -> Option<PathBuf> {
     }
 }
 
+/// Attempts to query the iTunes Search API using the track title and artist
+/// to find a high-resolution artwork URL (1024x1024).
+/// If the request fails, or no matches are found, it returns `None`.
+pub fn fetch_high_res_cover_from_itunes(title: &str, artist: &str) -> Option<String> {
+    if title.is_empty() || artist.is_empty() {
+        return None;
+    }
+
+    let search_term = format!("{} {}", artist, title);
+    let output = Command::new("curl")
+        .args(&[
+            "-G",
+            "-s",
+            "--data-urlencode",
+            &format!("term={}", search_term),
+            "https://itunes.apple.com/search",
+            "-d",
+            "entity=song",
+            "-d",
+            "limit=1",
+        ])
+        .output()
+        .ok()?;
+
+    if !output.status.success() {
+        return None;
+    }
+
+    let json: serde_json::Value = serde_json::from_slice(&output.stdout).ok()?;
+    let results = json.get("results")?.as_array()?;
+    if results.is_empty() {
+        return None;
+    }
+
+    let artwork_url_100 = results[0].get("artworkUrl100")?.as_str()?;
+    
+    // Replace 100x100 with 1024x1024 to fetch high resolution
+    if let Some(idx) = artwork_url_100.rfind("100x100") {
+        let (first, last) = artwork_url_100.split_at(idx);
+        let remainder = &last["100x100".len()..];
+        Some(format!("{}1024x1024{}", first, remainder))
+    } else {
+        Some(artwork_url_100.to_string())
+    }
+}
+
+
 #[cfg(feature = "theme")]
 /// Extracts a palette of 8 dominant colors from the cover art image.
 ///
@@ -316,3 +363,20 @@ pub fn update_theme(primary: Rgb, accent: Rgb) {
             .output();
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_fetch_high_res_cover_from_itunes() {
+        let title = "Sweater Weather";
+        let artist = "The Neighbourhood";
+        let res = fetch_high_res_cover_from_itunes(title, artist);
+        assert!(res.is_some());
+        let url = res.unwrap();
+        assert!(url.contains("1024x1024"));
+        assert!(url.starts_with("https://"));
+    }
+}
+

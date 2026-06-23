@@ -1,7 +1,7 @@
 use std::process::{Command, exit};
 use std::fs;
 use std::path::Path;
-use theme_art_daemon::{find_apple_music_player, get_local_art_path};
+use theme_art_daemon::{find_apple_music_player, get_local_art_path, fetch_high_res_cover_from_itunes};
 
 /// Strips C-style single-line comments from JSONC content to parse it cleanly.
 fn load_jsonc(path: &Path) -> Option<serde_json::Value> {
@@ -58,12 +58,17 @@ fn main() {
     let artist = parts[2].trim().to_string();
     let album = parts[3].trim().to_string();
     
-    // Find local cover art path
-    let local_art_path = if !art_url.is_empty() {
-        get_local_art_path(&art_url)
-    } else {
-        None
-    };
+    // Find local cover art path. Try fetching high resolution cover art from iTunes Search API first.
+    let mut local_art_path = None;
+    if !title.is_empty() && !artist.is_empty() {
+        if let Some(high_res_url) = fetch_high_res_cover_from_itunes(&title, &artist) {
+            local_art_path = get_local_art_path(&high_res_url);
+        }
+    }
+    
+    if local_art_path.is_none() && !art_url.is_empty() {
+        local_art_path = get_local_art_path(&art_url);
+    }
     
     // Read original fastfetch config template
     let home = std::env::var("HOME").unwrap_or_default();

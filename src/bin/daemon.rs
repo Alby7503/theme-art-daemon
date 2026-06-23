@@ -9,7 +9,8 @@ use std::process::Command;
 use std::thread;
 use std::time::Duration;
 use theme_art_daemon::{
-    find_apple_music_player, extract_colors, select_theme_colors, update_theme, Rgb
+    find_apple_music_player, extract_colors, select_theme_colors, update_theme, Rgb,
+    fetch_high_res_cover_from_itunes
 };
 
 /// Poll interval for checking player state.
@@ -68,11 +69,19 @@ fn main() {
                         last_track_id = track_id.clone();
                         println!("Track changed to: {} - {} (art URL: {})", title, artist, art_url);
                         
-                        if !art_url.is_empty() {
+                        // Try fetching high resolution cover art from iTunes Search API first.
+                        let mut resolved_art_url = art_url.clone();
+                        if !title.is_empty() && !artist.is_empty() {
+                            if let Some(high_res_url) = fetch_high_res_cover_from_itunes(&title, &artist) {
+                                resolved_art_url = high_res_url;
+                            }
+                        }
+
+                        if !resolved_art_url.is_empty() {
                             // Sleep briefly (200ms) to ensure file write is complete
                             thread::sleep(Duration::from_millis(200));
                             
-                            if let Some(colors) = extract_colors(&art_url) {
+                            if let Some(colors) = extract_colors(&resolved_art_url) {
                                 let (primary, accent) = select_theme_colors(&colors);
                                 update_theme(primary, accent);
                             } else {

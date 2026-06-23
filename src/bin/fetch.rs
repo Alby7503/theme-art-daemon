@@ -1,12 +1,3 @@
-//! # Apple Music CLI Fetch Tool (`music-fetch`)
-//!
-//! This CLI is designed to run on shell startup.
-//! It checks if Apple Music is currently playing:
-//! - If not, it exits with status `1` (allowing zsh to fallback to standard `fastfetch`).
-//! - If playing, it reads your `config.jsonc`, replaces the logo with the cover art,
-//!   injects the track details (Title, Artist, Album) as custom modules, and runs
-//!   `fastfetch` with this temporary configuration, showing a beautiful unified result.
-
 use std::process::{Command, exit};
 use std::fs;
 use std::path::Path;
@@ -100,7 +91,7 @@ fn main() {
         }
     }
     
-    // 2. Inject custom song modules right after the title module
+    // 2. Inject custom song modules right after the title module using Nerd Font icons
     if let Some(modules) = config_val.get_mut("modules") {
         if let Some(modules_arr) = modules.as_array_mut() {
             let mut insert_idx = 0;
@@ -117,13 +108,13 @@ fn main() {
                 serde_json::json!("break"),
                 serde_json::json!({
                     "type": "custom",
-                    "key": "🎵 Song",
+                    "key": "󰎆 Song",
                     "keyColor": "blue",
                     "format": title
                 }),
                 serde_json::json!({
                     "type": "custom",
-                    "key": "👤 Artist",
+                    "key": " Artist",
                     "keyColor": "blue",
                     "format": artist
                 }),
@@ -132,7 +123,7 @@ fn main() {
             if !album.is_empty() {
                 song_modules.push(serde_json::json!({
                     "type": "custom",
-                    "key": "💿 Album",
+                    "key": "󰀥 Album",
                     "keyColor": "blue",
                     "format": album
                 }));

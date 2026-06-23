@@ -4,13 +4,18 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-image = { version = "0.24", default-features = false, features = ["png", "jpeg"] }
+image = { version = "0.24", default-features = false, features = ["png", "jpeg"], optional = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+
+[features]
+default = ["theme"]
+theme = ["dep:image"]
 
 [[bin]]
 name = "theme-art-daemon"
 path = "src/bin/daemon.rs"
+required-features = ["theme"]
 
 [[bin]]
 name = "music-fetch"

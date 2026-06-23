@@ -43,15 +43,28 @@ sudo pacman -S playerctl fastfetch curl waybar
 
 ### 2. Build the Project
 
-Clone the repository and compile the optimized binaries:
+You can build the tools together or compile them independently. If you only want the lightweight `music-fetch` CLI (e.g. for terminal greetings) and want to skip compiling the heavy image processing libraries (the `image` crate):
+
 ```bash
+# Build ONLY music-fetch (blazing fast, lightweight)
+cargo build --release --no-default-features --bin music-fetch
+```
+
+If you want both `music-fetch` and the background theme border daemon (`theme-art-daemon`):
+
+```bash
+# Build both binaries (default)
 cargo build --release
 ```
 
-Copy the binaries to your local path:
+Copy the compiled binaries to your local path:
+
 ```bash
-cp target/release/theme-art-daemon ~/.local/bin/
+# For music-fetch:
 cp target/release/music-fetch ~/.local/bin/
+
+# For the theme daemon (if compiled):
+cp target/release/theme-art-daemon ~/.local/bin/
 ```
 
 ---

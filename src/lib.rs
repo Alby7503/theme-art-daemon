@@ -4,18 +4,27 @@
 //! resolving its album art file paths, extracting dominant colors from the cover art,
 //! and updating system borders (Hyprland) and status bars (Waybar) dynamically.
 
-use std::collections::HashMap;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::Command;
 use serde::Deserialize;
+
+#[cfg(feature = "theme")]
+use std::collections::HashMap;
+#[cfg(feature = "theme")]
+use std::path::Path;
+#[cfg(feature = "theme")]
 use image::GenericImageView;
+#[cfg(feature = "theme")]
 use image::io::Reader as ImageReader;
 
+#[cfg(feature = "theme")]
 /// Path to Waybar dynamic colors CSS file.
 pub const WAYBAR_COLORS_CSS: &str = "~/.config/waybar/colors.css";
+#[cfg(feature = "theme")]
 /// Fallback Hex color for the primary theme color.
 pub const DEFAULT_PRIMARY: &str = "#33ccff";
+#[cfg(feature = "theme")]
 /// Fallback Hex color for the accent theme color.
 pub const DEFAULT_ACCENT: &str = "#00ff99";
 
@@ -30,6 +39,7 @@ pub struct HyprlandClient {
     pub class: String,
 }
 
+#[cfg(feature = "theme")]
 /// Simple RGB pixel representation for color extraction.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Rgb {
@@ -38,6 +48,7 @@ pub struct Rgb {
     pub b: u8,
 }
 
+#[cfg(feature = "theme")]
 /// Converts an RGB color to HSV representation.
 ///
 /// Returns a tuple containing `(hue, saturation, value)` where all fields are `0.0` to `1.0`.
@@ -165,6 +176,7 @@ pub fn get_local_art_path(art_url: &str) -> Option<PathBuf> {
     }
 }
 
+#[cfg(feature = "theme")]
 /// Extracts a palette of 8 dominant colors from the cover art image.
 ///
 /// It downscales the image using a fast thumbnail resize and computes a
@@ -222,6 +234,7 @@ pub fn extract_colors(art_url: &str) -> Option<Vec<Rgb>> {
     Some(colors)
 }
 
+#[cfg(feature = "theme")]
 /// Selects a Primary and Accent color pair from the extracted palette.
 ///
 /// Colors are sorted by saturation, and candidates with mid-range brightness
@@ -268,6 +281,7 @@ pub fn select_theme_colors(colors: &[Rgb]) -> (Rgb, Rgb) {
     (c1, final_c2)
 }
 
+#[cfg(feature = "theme")]
 /// Applies the primary and accent colors to the system compositor and status bar.
 ///
 /// It updates Hyprland active border parameters dynamically, updates Waybar's
